@@ -258,3 +258,204 @@ Os testes podem ser realizados via **Postman** ou **Insomnia** importando as URL
 - **Histórico:** Todas as requisições aparecem no histórico (aba History)
 
 ---
+
+### ✅ Testes de Validação Completos (Assertions)
+
+O Postman permite criar testes automatizados para validar as respostas. Abaixo estão todas as 5 requisições com seus testes completos:
+
+#### 🔧 Configuração Inicial do Postman
+
+1. Abra o Postman
+2. Crie uma **Coleção** chamada "Desafio Backend"
+3. Crie um **Ambiente** e adicione esta variável:
+   - Nome: `url`
+   - Valor: `http://localhost:8080`
+
+---
+
+#### 1️⃣ Requisição: Calcular Comissões
+
+**Método:** `POST`  
+**URL:** `{{url}}/api/desafio/comissoes`
+
+**Aba Body (Raw JSON):**
+
+```json
+{
+    "vendas": [
+        { "vendedor": "João Silva", "valor": 1200.50 },
+        { "vendedor": "João Silva", "valor": 950.75 },
+        { "vendedor": "João Silva", "valor": 1800.00 },
+        { "vendedor": "João Silva", "valor": 1400.30 },
+        { "vendedor": "João Silva", "valor": 1100.90 },
+        { "vendedor": "João Silva", "valor": 1550.00 },
+        { "vendedor": "João Silva", "valor": 1700.80 },
+        { "vendedor": "João Silva", "valor": 250.30 },
+        { "vendedor": "João Silva", "valor": 480.75 },
+        { "vendedor": "João Silva", "valor": 320.40 },
+        { "vendedor": "Maria Souza", "valor": 2100.40 },
+        { "vendedor": "Maria Souza", "valor": 1350.60 },
+        { "vendedor": "Maria Souza", "valor": 950.20 },
+        { "vendedor": "Maria Souza", "valor": 1600.75 },
+        { "vendedor": "Maria Souza", "valor": 1750.00 },
+        { "vendedor": "Maria Souza", "valor": 1450.90 },
+        { "vendedor": "Maria Souza", "valor": 400.50 },
+        { "vendedor": "Maria Souza", "valor": 180.20 },
+        { "vendedor": "Maria Souza", "valor": 90.75 },
+        { "vendedor": "Carlos Oliveira", "valor": 800.50 },
+        { "vendedor": "Carlos Oliveira", "valor": 1200.00 },
+        { "vendedor": "Carlos Oliveira", "valor": 1950.30 },
+        { "vendedor": "Carlos Oliveira", "valor": 1750.80 },
+        { "vendedor": "Carlos Oliveira", "valor": 1300.60 },
+        { "vendedor": "Carlos Oliveira", "valor": 300.40 },
+        { "vendedor": "Carlos Oliveira", "valor": 500.00 },
+        { "vendedor": "Carlos Oliveira", "valor": 125.75 },
+        { "vendedor": "Ana Lima", "valor": 1000.00 },
+        { "vendedor": "Ana Lima", "valor": 1100.50 },
+        { "vendedor": "Ana Lima", "valor": 1250.75 },
+        { "vendedor": "Ana Lima", "valor": 1400.20 },
+        { "vendedor": "Ana Lima", "valor": 1550.90 },
+        { "vendedor": "Ana Lima", "valor": 1650.00 },
+        { "vendedor": "Ana Lima", "valor": 75.30 },
+        { "vendedor": "Ana Lima", "valor": 420.90 },
+        { "vendedor": "Ana Lima", "valor": 315.40 }
+    ]
+}
+```
+
+**Aba Tests:**
+
+```javascript
+// Verifica se a API respondeu com sucesso
+pm.test("Status code é 200", function () {
+    pm.response.to.have.status(200);
+});
+
+// Verifica se os vendedores foram processados
+pm.test("Retorno contém João Silva e comissão calculada", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property("João Silva");
+    pm.expect(jsonData["João Silva"]).to.be.above(0);
+});
+
+pm.test("Retorno contém Maria Souza", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property("Maria Souza");
+});
+```
+
+---
+
+#### 2️⃣ Requisição: Entrada de Estoque
+
+**Método:** `POST`  
+**URL:** `{{url}}/api/desafio/estoque/movimentar`
+
+**Aba Body (Raw JSON):**
+
+```json
+{
+    "codigoProduto": 101,
+    "descricaoMovimentacao": "Entrada Teste",
+    "tipo": "ENTRADA",
+    "quantidade": 50
+}
+```
+
+**Aba Tests:**
+
+```javascript
+pm.test("Status code é 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Estoque atualizado corretamente (150 + 50 = 200)", function () {
+    var jsonData = pm.response.json();
+    // O produto 101 começa com 150 no JSON original
+    pm.expect(jsonData.saldoFinal).to.eql(200);
+});
+```
+
+---
+
+#### 3️⃣ Requisição: Saída de Estoque
+
+**Método:** `POST`  
+**URL:** `{{url}}/api/desafio/estoque/movimentar`
+
+**Aba Body (Raw JSON):**
+
+```json
+{
+    "codigoProduto": 104,
+    "descricaoMovimentacao": "Saída Teste",
+    "tipo": "SAIDA",
+    "quantidade": 20
+}
+```
+
+**Aba Tests:**
+
+```javascript
+pm.test("Status code é 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Estoque atualizado corretamente (320 - 20 = 300)", function () {
+    var jsonData = pm.response.json();
+    // O produto 104 começa com 320 no JSON original
+    pm.expect(jsonData.saldoFinal).to.eql(300);
+});
+```
+
+---
+
+#### 4️⃣ Requisição: Calcular Juros (Automático)
+
+**Método:** `GET`  
+**URL:** `{{url}}/api/desafio/juros?valor=100.00&vencimento={{dataVencimento}}`
+
+**Aba Pre-request Script** (IMPORTANTE - copie isso para gerar a data de 10 dias atrás automaticamente):
+
+```javascript
+// Cria uma data de 10 dias atrás
+var data = new Date();
+data.setDate(data.getDate() - 10);
+
+// Formata para YYYY-MM-DD
+var dataFormatada = data.toISOString().split('T')[0];
+
+// Salva na variável global do Postman
+pm.environment.set("dataVencimento", dataFormatada);
+```
+
+**Aba Tests:**
+
+```javascript
+pm.test("Cálculo de juros correto (25%)", function () {
+    var resposta = pm.response.json();
+    // 10 dias * 2.5% = 25% de multa.
+    // 100 + 25 = 125
+    pm.expect(resposta).to.eql(125.00);
+});
+```
+
+---
+
+#### 🎯 Como Executar Todos os Testes
+
+1. Clique em sua **Collection** "Desafio Backend" (no painel esquerdo)
+2. Clique em **Run** (botão azul com ▶️ no topo)
+3. Selecione todas as 5 requisições que deseja testar
+4. Clique em **Run [Nome da Coleção]**
+5. Veja os resultados em tempo real com ✅ (passou) ou ❌ (falhou)
+
+---
+
+#### 📸 Resultado dos Testes
+
+Abaixo está a screenshot com todos os testes passando:
+
+![Testes Postman - Todos Passando](./imgs/SaidaPostman.png)
+
+---
